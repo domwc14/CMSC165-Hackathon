@@ -2,6 +2,7 @@
 Image Processing Project detecting seeds
 
 Contributors:
+
 Malonjao
 
 Fojas
