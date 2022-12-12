@@ -1,0 +1,183 @@
+#path 
+#color function, need to get values of track bar
+# if statement break, if clicked display result, stop while loop
+
+import tkinter as tk
+from tkinter import filedialog
+from tkinter import *
+import cv2
+from PIL import Image, ImageTk
+import numpy as np
+import time
+
+global text 
+text = "Pollinated"
+
+def nothing(x):
+    pass
+
+def select_image():
+
+    path = filedialog.askopenfilename()
+
+    if path:
+
+        image = cv2.imread(path, cv2.IMREAD_COLOR)
+        h, w, c = image.shape
+        image2 = cv2.resize(image, (int(w*0.15),int(h*0.15)))
+
+        show_image = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
+        show_image = Image.fromarray(show_image)
+
+        show_image = ImageTk.PhotoImage(show_image)
+        label_img = tk.Label(app, image=show_image, relief=tk.SOLID)
+        label_img.image = show_image
+        label_img.place(x=400, y=150)
+        read_image(path)
+        #set up the path of the image using the tkinter then after getting the path
+        
+
+
+def modify_image(name, value):
+    print(name, value)
+    
+def detect_image(): #function to display altered image
+    detect_function_is_pressed = 1
+       # sample_text.insert(0, "Detected: ")
+    f = open("test_file.txt", "w")
+    f.write("Detected: 3")
+    f.close()
+
+#this function shall be implemented for calling the gaussian trackbar values and dilation values 
+#because their values should always be positive
+def isOdd(x):
+    if (x%2==0):
+        return x+1
+    return x
+
+# def detect(input_image):
+#if the parameters are passed to the function
+def detect(img,hsv_image, l_h,l_s,l_v,u_h,u_s,u_v,g_b,d_k):
+
+    #the values for the lower and upper bounds of the image
+    lower_bound = np.array([l_h, l_s, l_v])
+    upper_bound = np.array([u_h, u_s, u_v])
+    mask = cv2.inRange(hsv_image, lower_bound, upper_bound) #this is the binary image?
+    masked_image = cv2.bitwise_and(img, img, mask=mask) #this gets the binary picture with the objects in white
+    
+    #next step is to convert the resulting image to grayscale
+    gray = cv2.cvtColor(masked_image, cv2.COLOR_BGR2GRAY)
+    
+    #getting the gaussian blur of the image. But what is the best kernel size?
+    blur = cv2.GaussianBlur(gray, (g_b, g_b), 1)
+    canny = cv2.Canny(blur, 30, 150, 3)
+
+    dilated = cv2.dilate(canny, (d_k, d_k), iterations=1)
+    (cnt, hierarchy) = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    rgb = cv2.cvtColor(masked_image, cv2.COLOR_BGR2RGB)
+    cv2.drawContours(rgb, cnt, -1, (0, 255, 0), 2)
+    
+    return [rgb, cnt]
+
+#read image should also be in function
+def read_image(path):
+    img = cv2.imread(path, cv2.IMREAD_COLOR)
+    h, w, c = img.shape
+    img=cv2.resize(img, (int(w*0.15),int(h*0.15)))
+    hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    caller_function(img,hsv_image)
+
+
+def caller_function(img,image):
+    #the function should be in a loop to always have the preview of the output image,
+    #then if the button is clicked to detect, the while loop shall be broken, and the result shall be printed
+    while (True):
+    #get value of trackbars
+    #l_h, l_s, l_v, u_h, u_s, u_v, g_b, u,v
+    #lower Hue, lower Saturation, lower value, Upper Hue, Upper Saturation, Upper value, gaussian kernel size, dilation kernel size
+        l_h = cv2.getTrackbarPos("L - H", window_name)
+        l_s = cv2.getTrackbarPos("L - S", window_name)
+        l_v = cv2.getTrackbarPos("L - V", window_name)
+        u_h = cv2.getTrackbarPos("U - H", window_name)
+        u_s = cv2.getTrackbarPos("U - S", window_name)
+        u_v = cv2.getTrackbarPos("U - V", window_name)
+        g_b = cv2.getTrackbarPos("Gaussian Blur", window_name)
+        d_k = cv2.getTrackbarPos("Dilation Kernel", window_name)
+        print(l_h)
+
+        result = detect(img,image,l_h, l_s, l_v, u_h, u_s, u_v, g_b,d_k) 
+        
+        # cv2.imwrite("result.jpg",result[0])
+        #display the image in the window
+
+    #result[0] is the image with contours on
+    #result[1] is the number of objects detected
+    
+        if cv2.waitKey(1) & 0xFF == 27:
+            image = cv2.cvtColor(result[0], cv2.COLOR_RGB2BGR)
+            cv2.imwrite("result.jpeg",result[0])
+
+            h, w, c = image.shape
+            image2 = cv2.resize(image, (w,h))
+
+            show_image = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
+            show_image = Image.fromarray(show_image)
+
+            show_image = ImageTk.PhotoImage(show_image)
+            label_img = tk.Label(app, image=show_image, relief=tk.SOLID)
+            label_img.image = show_image
+            label_img.place(x=1200, y=150)
+            f = open("results.txt", 'w')
+            line = "Detected pollens: "+str(len(result[1]))
+            f.write(line)
+            f.close()
+            break
+    cv2.destroyAllWindows()
+
+
+#the main function here
+app = tk.Tk()
+
+width = app.winfo_screenwidth()
+height = app.winfo_screenheight()
+
+app.geometry('{}x{}'.format(width, height))
+
+
+#(win, text="Button-1",height= 5, width=10).pack()
+btn = tk.Button(app, text="Select Image", command=select_image, width=12)
+btn.place(x=150, y=600)
+
+btn = tk.Button(app, text="Detect Image", command=detect_image, width=12)
+btn.place(x=150, y=640)
+
+#textbox below the buttons
+sample_text = tk.Entry(app)
+sample_text.place(x=150, y=690)
+#sample_text.config(state=DISABLED)
+
+
+window_name = "Trackbars"
+cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+cv2.setWindowProperty(window_name, cv2.WND_PROP_TOPMOST, 1)
+cv2.resizeWindow(window_name,300,40) #w,h
+cv2.createTrackbar("L - H", window_name, 0, 179, nothing)
+cv2.createTrackbar("L - S", window_name, 0, 255, nothing)
+cv2.createTrackbar("L - V", window_name, 0, 255, nothing)
+cv2.createTrackbar("U - H", window_name, 179, 179, nothing)
+cv2.createTrackbar("U - S", window_name, 255, 255, nothing)
+cv2.createTrackbar("U - V", window_name, 255, 255, nothing)
+cv2.createTrackbar("Gaussian Blur", "Trackbars", 1, 21, nothing)
+cv2.createTrackbar("Dilation Kernel", "Trackbars", 1, 21, nothing)
+
+
+# l_h = cv2.getTrackbarPos("L - H", window_name)
+# l_s = cv2.getTrackbarPos("L - S", window_name)
+# l_v = cv2.getTrackbarPos("L - V", window_name)
+# u_h = cv2.getTrackbarPos("U - H", window_name)
+# u_s = cv2.getTrackbarPos("U - S", window_name)
+# u_v = cv2.getTrackbarPos("U - V", window_name)
+# g_b = cv2.getTrackbarPos("Gaussian Blur", window_name)
+# d_k = cv2.getTrackbarPos("Dilation Kernel", window_name)
+
+app.mainloop()
