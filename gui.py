@@ -66,6 +66,9 @@ def detect_image(): #function to display altered image
         label_img.image = image 
         label_img.place(x=1200, y=150)
         sample_text.insert(0, "Detected: ")
+        f = open("test_file.txt", "w")
+        f.write("Detected: 3")
+        f.close()
 
 app = tk.Tk()
 
