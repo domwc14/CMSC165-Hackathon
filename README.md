@@ -10,3 +10,5 @@ Fojas
 Granada
 
 Submitted as requirements for CMSC 165 
+Dependencies:
+OpenCV, Pillow, tkinter
