@@ -24,7 +24,7 @@ def select_image():
 
         image = cv2.imread(path, cv2.IMREAD_COLOR)
         h, w, c = image.shape
-        image2 = cv2.resize(image, (int(w*0.15),int(h*0.15)))
+        image2 = cv2.resize(image, (int(w*0.20),int(h*0.20)))
 
         show_image = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
         show_image = Image.fromarray(show_image)
@@ -83,7 +83,7 @@ def detect(img,hsv_image, l_h,l_s,l_v,u_h,u_s,u_v,g_b,d_k):
 def read_image(path):
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     h, w, c = img.shape
-    img=cv2.resize(img, (int(w*0.15),int(h*0.15)))
+    img=cv2.resize(img, (int(w*0.20),int(h*0.20)))
     hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     caller_function(img,hsv_image)
 
@@ -126,7 +126,7 @@ def caller_function(img,image):
             show_image = ImageTk.PhotoImage(show_image)
             label_img = tk.Label(app, image=show_image, relief=tk.SOLID)
             label_img.image = show_image
-            label_img.place(x=1200, y=150)
+            label_img.place(x=1000, y=150)
             f = open("results.txt", 'w')
             line = "Detected pollens: "+str(len(result[1]))
             f.write(line)
@@ -148,8 +148,8 @@ app.geometry('{}x{}'.format(width, height))
 btn = tk.Button(app, text="Select Image", command=select_image, width=12)
 btn.place(x=150, y=600)
 
-btn = tk.Button(app, text="Detect Image", command=detect_image, width=12)
-btn.place(x=150, y=640)
+#btn = tk.Button(app, text="Detect Image", command=detect_image, width=12)
+#btn.place(x=150, y=640)
 
 #textbox below the buttons
 sample_text = tk.Entry(app)
